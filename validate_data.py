@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 validate_data.py  — 数据格式校验
 用途：在 CI/CD 中执行，检查 CSV 数据格式是否正确
@@ -28,7 +28,7 @@ path = DATA_DIR / 'categories.csv'
 check(path.exists(), 'File exists')
 if path.exists():
     import pandas as pd
-    df = pd.read_csv(path, encoding='gbk')
+    df = pd.read_csv(path, encoding='utf-8')
     check(len(df) == 272, f'Row count: {len(df)} (expect 272)')
     check('category_id' in df.columns, 'Has category_id column')
     check('category' in df.columns, 'Has category column')
@@ -43,7 +43,7 @@ print('\n--- products.csv ---')
 path = DATA_DIR / 'products.csv'
 check(path.exists(), 'File exists')
 if path.exists():
-    df = pd.read_csv(path, encoding='gbk')
+    df = pd.read_csv(path, encoding='utf-8')
     check(len(df) == 70000, f'Row count: {len(df)} (expect 70000)')
     check('product_id' in df.columns, 'Has product_id column')
     check('category_id' in df.columns, 'Has category_id column')

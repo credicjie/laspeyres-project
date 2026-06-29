@@ -19,7 +19,7 @@ OUTPUT_DIR = BASE_DIR / 'output'
 CONFIG_FILE = BASE_DIR / 'config.json'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-CSV_ENCODING = 'gbk'
+CSV_ENCODING = 'utf-8'
 
 
 def load_categories(path):
@@ -49,7 +49,7 @@ def load_categories(path):
 
 
 def load_products(path):
-    """weight = 基期数量 qᵢ₀ (Laspeyres 公式)"""
+    """weight = 鍩烘湡鏁伴噺 q岬⑩個 (Laspeyres 鍏紡)"""
     df = pd.read_csv(path, encoding=CSV_ENCODING)
     base = df[['product_id', 'category_id', 'price', 'weight']].copy()
     base.rename(columns={'price': 'base_price', 'weight': 'base_qty'}, inplace=True)
@@ -57,7 +57,7 @@ def load_products(path):
 
 
 def compute_laspeyres_for_day(daily_path, product_base):
-    """L = (Σ pᵢₜ·qᵢ₀) / (Σ pᵢ₀·qᵢ₀) × 100"""
+    """L = (危 p岬⑩倻路q岬⑩個) / (危 p岬⑩個路q岬⑩個) 脳 100"""
     daily = pd.read_csv(daily_path, encoding=CSV_ENCODING)
     slim = daily[['product_id', 'price']].rename(columns={'price': 'curr_price'})
     m = slim.merge(product_base[['product_id', 'base_price', 'base_qty']],
@@ -94,8 +94,8 @@ def compute_category_indices(daily_path, product_base, cat_to_top, top_names):
 
 def plot_main_index(df, save_path):
     fig, ax = plt.subplots(figsize=(16, 7))
-    ax.plot(df['date'], df['index'], lw=1.8, color='#2563eb', label='拉式价格指数')
-    ax.axhline(y=100, color='#dc2626', ls='--', lw=1, alpha=0.6, label='基期 = 100')
+    ax.plot(df['date'], df['index'], lw=1.8, color='#2563eb', label='鎷夊紡浠锋牸鎸囨暟')
+    ax.axhline(y=100, color='#dc2626', ls='--', lw=1, alpha=0.6, label='鍩烘湡 = 100')
 
     min_r = df.loc[df['index'].idxmin()]
     max_r = df.loc[df['index'].idxmax()]
@@ -108,9 +108,9 @@ def plot_main_index(df, save_path):
             fontsize=9, color=c, fontweight='bold',
             bbox=dict(boxstyle='round,pad=0.3', fc='white', ec='none', alpha=0.8))
 
-    ax.set_title('拉式价格指数趋势图 (Laspeyres Price Index)', fontsize=14, fontweight='bold', pad=15)
-    ax.set_xlabel('日期', fontsize=11)
-    ax.set_ylabel('价格指数 (基期 = 100)', fontsize=11)
+    ax.set_title('鎷夊紡浠锋牸鎸囨暟瓒嬪娍鍥?(Laspeyres Price Index)', fontsize=14, fontweight='bold', pad=15)
+    ax.set_xlabel('鏃ユ湡', fontsize=11)
+    ax.set_ylabel('浠锋牸鎸囨暟 (鍩烘湡 = 100)', fontsize=11)
     ax.grid(True, alpha=0.25)
     ax.legend(fontsize=10, loc='upper left')
     ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
@@ -131,9 +131,9 @@ def plot_category_indices(df_cat, save_path):
         ax.plot(df_cat['date'], df_cat[col], lw=1.2,
                 color=colors[idx % 8], label=col, alpha=0.85)
     ax.axhline(y=100, color='gray', ls='--', lw=0.8, alpha=0.4)
-    ax.set_title('各大类拉式价格指数对比', fontsize=14, fontweight='bold', pad=15)
-    ax.set_xlabel('日期', fontsize=11)
-    ax.set_ylabel('价格指数 (基期 = 100)', fontsize=11)
+    ax.set_title('鍚勫ぇ绫绘媺寮忎环鏍兼寚鏁板姣?, fontsize=14, fontweight='bold', pad=15)
+    ax.set_xlabel('鏃ユ湡', fontsize=11)
+    ax.set_ylabel('浠锋牸鎸囨暟 (鍩烘湡 = 100)', fontsize=11)
     ax.grid(True, alpha=0.25)
     ax.legend(fontsize=8, ncol=2, loc='upper left')
     ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
@@ -146,23 +146,23 @@ def plot_category_indices(df_cat, save_path):
 
 def main():
     print('=' * 60)
-    print('大数据课设 — 拉式价格指数 (Laspeyres Price Index)')
+    print('澶ф暟鎹璁?鈥?鎷夊紡浠锋牸鎸囨暟 (Laspeyres Price Index)')
     print('=' * 60)
 
-    print('\n[1/6] 读取分类数据...')
+    print('\n[1/6] 璇诲彇鍒嗙被鏁版嵁...')
     cat_all, cat_to_top, top_names = load_categories(DATA_DIR / 'categories.csv')
-    print(f'  -> {len(cat_all)} 个分类, {len(top_names)} 个大类')
+    print(f'  -> {len(cat_all)} 涓垎绫? {len(top_names)} 涓ぇ绫?)
 
-    print('\n[2/6] 读取商品基期数据...')
+    print('\n[2/6] 璇诲彇鍟嗗搧鍩烘湡鏁版嵁...')
     product_base = load_products(DATA_DIR / 'products.csv')
-    print(f'  -> {len(product_base)} 种商品, 基期数量合计 {product_base["base_qty"].sum():.2f}')
+    print(f'  -> {len(product_base)} 绉嶅晢鍝? 鍩烘湡鏁伴噺鍚堣 {product_base["base_qty"].sum():.2f}')
 
-    print('\n[3/6] 扫描每日价格文件...')
+    print('\n[3/6] 鎵弿姣忔棩浠锋牸鏂囦欢...')
     daily_files = sorted(PRICE_DIR.glob('daily_prices_*.csv'))
-    print(f'  -> {len(daily_files)} 个文件')
+    print(f'  -> {len(daily_files)} 涓枃浠?)
     print(f'  -> {daily_files[0].stem[-8:]} ~ {daily_files[-1].stem[-8:]}')
 
-    print('\n[4/6] 逐日计算拉式价格指数...')
+    print('\n[4/6] 閫愭棩璁＄畻鎷夊紡浠锋牸鎸囨暟...')
     results = []
     cat_results = []
     step = max(len(daily_files) // 10, 1)
@@ -182,22 +182,22 @@ def main():
 
         if (i + 1) % step == 0:
             print(f'  -> {(i+1)/len(daily_files)*100:.0f}%')
-    print(f'  -> 完成! {len(results)} 天')
+    print(f'  -> 瀹屾垚! {len(results)} 澶?)
 
-    print('\n[5/6] 生成曲线图...')
+    print('\n[5/6] 鐢熸垚鏇茬嚎鍥?..')
     df_idx = pd.DataFrame(results).sort_values('date').reset_index(drop=True)
     df_idx.to_csv(OUTPUT_DIR / 'laspeyres_index.csv', index=False, encoding='utf-8-sig')
-    print(f'  -> 指数: {df_idx["index"].min():.2f} ~ {df_idx["index"].max():.2f}')
+    print(f'  -> 鎸囨暟: {df_idx["index"].min():.2f} ~ {df_idx["index"].max():.2f}')
     plot_main_index(df_idx, OUTPUT_DIR / 'laspeyres_chart.png')
-    print(f'  -> 总体曲线图: output/laspeyres_chart.png')
+    print(f'  -> 鎬讳綋鏇茬嚎鍥? output/laspeyres_chart.png')
 
     if cat_results:
         df_cat = pd.DataFrame(cat_results).sort_values('date').reset_index(drop=True)
         df_cat.to_csv(OUTPUT_DIR / 'category_indices.csv', index=False, encoding='utf-8-sig')
         plot_category_indices(df_cat, OUTPUT_DIR / 'category_indices_chart.png')
-        print(f'  -> 分类曲线图: output/category_indices_chart.png')
+        print(f'  -> 鍒嗙被鏇茬嚎鍥? output/category_indices_chart.png')
 
-    print('\n[6/6] 上传至阿里云 OSS...')
+    print('\n[6/6] 涓婁紶鑷抽樋閲屼簯 OSS...')
     oss = OSSClient(CONFIG_FILE)
     if oss.is_configured():
         oss.upload_file(str(DATA_DIR / 'categories.csv'), 'data/categories.csv')
@@ -209,18 +209,18 @@ def main():
             oss.upload_file(str(OUTPUT_DIR / 'category_indices_chart.png'), 'output/category_indices_chart.png')
         oss.upload_file(str(daily_files[0]), f'data/daily_price/{daily_files[0].name}')
         oss.upload_file(str(daily_files[-1]), f'data/daily_price/{daily_files[-1].name}')
-        print(f'  -> 全部上传完成! Bucket: {oss.get_bucket_name()}')
+        print(f'  -> 鍏ㄩ儴涓婁紶瀹屾垚! Bucket: {oss.get_bucket_name()}')
     else:
-        print('  -> 跳过 (config.json 未配置 OSS)')
-        print('  -> 编辑 config.json 后重新运行即可上传')
+        print('  -> 璺宠繃 (config.json 鏈厤缃?OSS)')
+        print('  -> 缂栬緫 config.json 鍚庨噸鏂拌繍琛屽嵆鍙笂浼?)
 
     print()
     print('=' * 60)
-    print('全部完成!')
-    print(f'  指数数据:   output/laspeyres_index.csv')
-    print(f'  总体曲线图: output/laspeyres_chart.png')
+    print('鍏ㄩ儴瀹屾垚!')
+    print(f'  鎸囨暟鏁版嵁:   output/laspeyres_index.csv')
+    print(f'  鎬讳綋鏇茬嚎鍥? output/laspeyres_chart.png')
     if cat_results:
-        print(f'  分类曲线图: output/category_indices_chart.png')
+        print(f'  鍒嗙被鏇茬嚎鍥? output/category_indices_chart.png')
     print('=' * 60)
 
 

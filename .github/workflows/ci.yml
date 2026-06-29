@@ -53,12 +53,20 @@ jobs:
             c = json.load(f)['oss']
         auth = oss2.Auth(c['access_key_id'], c['access_key_secret'])
         bucket = oss2.Bucket(auth, c['endpoint'], c['bucket_name'])
-        files = [('data/categories.csv','data/categories.csv'), ('data/products.csv','data/products.csv')]
-        for remote, local in files:
-            result = bucket.get_object(remote)
-            with open(local, 'wb') as f:
-                f.write(result.read())
-            print('Downloaded: ' + local)
+
+        # categories_utf8.csv is UTF-8, save directly
+        r = bucket.get_object('data/categories_utf8.csv')
+        with open('data/categories.csv', 'wb') as f:
+            f.write(r.read())
+        print('Downloaded: categories.csv (UTF-8)')
+
+        # products.csv is GBK, decode then re-save as UTF-8
+        r = bucket.get_object('data/products.csv')
+        raw = r.read()
+        text = raw.decode('gbk')
+        with open('data/products.csv', 'w', encoding='utf-8') as f:
+            f.write(text)
+        print('Downloaded: products.csv (converted GBK->UTF-8)')
         "
 
     - name: "[1/4] Data validation"
