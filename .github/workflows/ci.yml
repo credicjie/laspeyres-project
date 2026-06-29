@@ -70,6 +70,7 @@ jobs:
 
     - name: "[3/4] Integration test (allow failure)"
       continue-on-error: true
+      timeout-minutes: 1
       run: python connector.py --skip-test --with-prices || echo "CK deploy skipped"
 
     - name: "[4/4] Generate Laspeyres chart"
