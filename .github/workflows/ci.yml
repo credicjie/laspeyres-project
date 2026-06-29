@@ -53,7 +53,8 @@ jobs:
             c = json.load(f)['oss']
         auth = oss2.Auth(c['access_key_id'], c['access_key_secret'])
         bucket = oss2.Bucket(auth, c['endpoint'], c['bucket_name'])
-        for remote, local in [('data/categories_utf8.csv', 'data/categories.csv'), ('data/products.csv', 'data/products.csv')]:
+        files = [('data/categories.csv','data/categories.csv'), ('data/products.csv','data/products.csv')]
+        for remote, local in files:
             result = bucket.get_object(remote)
             with open(local, 'wb') as f:
                 f.write(result.read())
