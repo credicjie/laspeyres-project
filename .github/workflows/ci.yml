@@ -48,20 +48,16 @@ jobs:
       run: |
         mkdir -p data
         python -c "
-        from oss_utils import OSSClient
-        oss = OSSClient('config.json')
-        files = {
-            'data/categories.csv': 'data/categories_utf8.csv',
-            'data/products.csv': 'data/products.csv',
-        }
-        for local, remote in files.items():
-            raw = oss.read_raw(remote)
-            if raw:
-                with open(local, 'w', encoding='utf-8') as f:
-                    f.write(raw)
-                print(f'Downloaded: {local}')
-            else:
-                print(f'FAIL: {remote}')
+        import oss2, json
+        with open('config.json') as f:
+            c = json.load(f)['oss']
+        auth = oss2.Auth(c['access_key_id'], c['access_key_secret'])
+        bucket = oss2.Bucket(auth, c['endpoint'], c['bucket_name'])
+        for remote, local in [('data/categories_utf8.csv', 'data/categories.csv'), ('data/products.csv', 'data/products.csv')]:
+            result = bucket.get_object(remote)
+            with open(local, 'wb') as f:
+                f.write(result.read())
+            print('Downloaded: ' + local)
         "
 
     - name: "[1/4] Data validation"
