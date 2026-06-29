@@ -1,0 +1,21 @@
+﻿# 虚拟环境
+.venv/
+venv/
+env/
+
+# PyCharm
+.idea/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 配置（含敏感信息）
+config.json
+
+# 数据和输出（GitHub上不需要）
+data/
+output/
+
+# 日志
+~$*.docx

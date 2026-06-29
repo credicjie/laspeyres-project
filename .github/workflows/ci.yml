@@ -1,0 +1,63 @@
+name: 大数据课设 CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  ci-cd:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install oss2 requests pandas matplotlib python-docx
+
+    - name: Configure connections
+      run: |
+        cat > config.json << 'EOF'
+        {
+            "oss": {
+                "access_key_id": "${{ secrets.OSS_AK }}",
+                "access_key_secret": "${{ secrets.OSS_SK }}",
+                "endpoint": "oss-cn-hangzhou.aliyuncs.com",
+                "bucket_name": "${{ secrets.OSS_BUCKET }}"
+            },
+            "clickhouse": {
+                "host": "${{ secrets.CK_HOST }}",
+                "port": 8123,
+                "user": "${{ secrets.CK_USER }}",
+                "password": "${{ secrets.CK_PASSWORD }}",
+                "database": "laspeyres"
+            }
+        }
+        EOF
+
+    - name: "[1/4] Data validation & type conversion"
+      run: python validate_data.py
+
+    - name: "[2/4] Unit test - small data OSS->ClickHouse"
+      run: python test_connector.py
+
+    - name: "[3/4] Integration test - full data deploy"
+      run: python connector.py --skip-test --with-prices
+
+    - name: "[4/4] Generate Laspeyres chart"
+      run: python analytics_from_ck.py
+
+    - name: Upload charts as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: laspeyres-charts
+        path: output/
