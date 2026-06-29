@@ -1,4 +1,4 @@
-name: 大数据课设 CI/CD
+name: 澶ф暟鎹璁?CI/CD
 
 on:
   push:
@@ -57,7 +57,7 @@ jobs:
       run: python analytics_from_ck.py
 
     - name: Upload charts as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: laspeyres-charts
         path: output/
