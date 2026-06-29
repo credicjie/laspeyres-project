@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install oss2 requests pandas matplotlib python-docx
+        pip install oss2 requests pandas matplotlib
 
     - name: Configure connections
       run: |
@@ -44,18 +44,38 @@ jobs:
         }
         EOF
 
+    - name: Download data from OSS
+      run: |
+        mkdir -p data
+        python -c "
+        from oss_utils import OSSClient
+        oss = OSSClient('config.json')
+        files = {
+            'data/categories.csv': 'data/categories_utf8.csv',
+            'data/products.csv': 'data/products.csv',
+        }
+        for local, remote in files.items():
+            raw = oss.read_raw(remote)
+            if raw:
+                with open(local, 'w', encoding='utf-8') as f:
+                    f.write(raw)
+                print(f'Downloaded: {local}')
+            else:
+                print(f'FAIL: {remote}')
+        "
+
     - name: "[1/4] Data validation"
       run: python validate_data.py
 
     - name: "[2/4] Unit test (allow failure)"
       continue-on-error: true
-      run: python test_connector.py || echo "CK connection skipped (network)"
+      run: python test_connector.py || echo "CK test skipped"
 
     - name: "[3/4] Integration test (allow failure)"
       continue-on-error: true
-      run: python connector.py --skip-test --with-prices || echo "CK deploy skipped (network)"
+      run: python connector.py --skip-test --with-prices || echo "CK deploy skipped"
 
-    - name: "[4/4] Generate Laspeyres chart from local data"
+    - name: "[4/4] Generate Laspeyres chart"
       run: python analytics.py
 
     - name: Upload charts
